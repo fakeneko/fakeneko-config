@@ -1,0 +1,115 @@
+package cn.com.fakeneko.config.impl.gui;
+
+import com.mojang.blaze3d.platform.InputConstants;
+import cn.com.fakeneko.config.impl.keybind.InputKeys;
+import cn.com.fakeneko.config.impl.types.HotkeyConfig;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
+import net.minecraft.client.gui.components.Button;
+import net.minecraft.client.gui.components.events.GuiEventListener;
+import net.minecraft.client.gui.screens.Screen;
+import net.minecraft.network.chat.Component;
+
+import java.util.ArrayList;
+import java.util.List;
+
+public class HotkeyScreen extends Screen {
+	private static final Component TITLE = Component.translatable("config.fakeneko_config.hotkey.title");
+	private static final Component PRESS = Component.translatable("config.fakeneko_config.hotkey.press");
+	private static final Component RESET = Component.translatable("config.fakeneko_config.reset_single");
+	private static final Component DONE = Component.translatable("gui.done");
+	private static final Component CLEAR = Component.translatable("config.fakeneko_config.clear");
+
+	private final ConfigScreen lastScreen;
+	private final HotkeyConfig config;
+	private Button keyButton;
+	private Button resetButton;
+	private Button doneButton;
+	private Button clearButton;
+	private final List<InputConstants.Key> recording = new ArrayList<>();
+
+	public HotkeyScreen(ConfigScreen lastScreen, HotkeyConfig config) {
+		super(TITLE);
+		this.lastScreen = lastScreen;
+		this.config = config;
+		this.recording.addAll(this.config.get());
+	}
+
+	@Override
+	protected void init() {
+		this.keyButton = this.addRenderableWidget(Button.builder(
+			this.formatRecording(),
+			button -> {}
+		).bounds(this.width / 2 - 75, this.height / 2 - 30, 150, 20).build());
+
+		this.clearButton = this.addRenderableWidget(Button.builder(CLEAR, button -> {
+			this.recording.clear();
+			this.updateKeyButton();
+		}).bounds(this.width / 2 - 155, this.height / 2 + 10, 150, 20).build());
+
+		this.resetButton = this.addRenderableWidget(Button.builder(RESET, button -> {
+			this.recording.clear();
+			this.recording.addAll(this.config.defaultValue());
+			this.updateKeyButton();
+		}).bounds(this.width / 2 + 5, this.height / 2 + 10, 150, 20).build());
+
+		this.doneButton = this.addRenderableWidget(Button.builder(DONE, button -> this.onClose())
+			.bounds(this.width / 2 - 75, this.height / 2 + 40, 150, 20).build());
+	}
+
+	@Override
+	public boolean keyPressed(net.minecraft.client.input.KeyEvent event) {
+		if (event.key() == InputConstants.KEY_ESCAPE) {
+			return super.keyPressed(event);
+		}
+		if (event.key() == InputConstants.KEY_RETURN || event.key() == InputConstants.KEY_NUMPADENTER) {
+			this.onClose();
+			return true;
+		}
+		InputConstants.Key key = InputConstants.Type.KEYSYM.getOrCreate(event.key());
+		this.recordKey(key);
+		return true;
+	}
+
+	@Override
+	public boolean mouseClicked(net.minecraft.client.input.MouseButtonEvent event, boolean doubleClick) {
+		if (this.doneButton.isMouseOver(event.x(), event.y()) || this.resetButton.isMouseOver(event.x(), event.y()) || this.clearButton.isMouseOver(event.x(), event.y())) {
+			return super.mouseClicked(event, doubleClick);
+		}
+		InputConstants.Key key = InputConstants.Type.MOUSE.getOrCreate(event.button());
+		this.recordKey(key);
+		return true;
+	}
+
+	private void recordKey(InputConstants.Key key) {
+		if (!this.recording.contains(key)) {
+			this.recording.add(key);
+		}
+		this.updateKeyButton();
+	}
+
+	private Component formatRecording() {
+		return this.recording.isEmpty() ? PRESS : InputKeys.format(this.recording);
+	}
+
+	private void updateKeyButton() {
+		this.keyButton.setMessage(this.formatRecording());
+	}
+
+	@Override
+	public void extractRenderState(GuiGraphicsExtractor graphics, int mouseX, int mouseY, float a) {
+		graphics.text(Minecraft.getInstance().font, this.title, this.width / 2 - this.font.width(this.title) / 2, 20, 0xFFFFFF);
+		graphics.text(Minecraft.getInstance().font, PRESS, this.width / 2 - this.font.width(PRESS) / 2, this.height / 2 - 55, 0xAAAAAA);
+		for (GuiEventListener child : this.children()) {
+			if (child instanceof net.minecraft.client.gui.components.Renderable renderable) {
+				renderable.extractRenderState(graphics, mouseX, mouseY, a);
+			}
+		}
+	}
+
+	@Override
+	public void onClose() {
+		this.config.set(new InputKeys(this.recording));
+		this.minecraft.gui.setScreen(this.lastScreen);
+	}
+}
