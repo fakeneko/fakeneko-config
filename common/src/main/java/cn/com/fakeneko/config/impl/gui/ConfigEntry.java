@@ -72,6 +72,17 @@ public class ConfigEntry extends ConfigList.Entry {
 					{
 						this.updateMessage();
 					}
+
+					@Override
+					public boolean mouseClicked(net.minecraft.client.input.MouseButtonEvent event, boolean doubleClick) {
+						if (this.isMouseOver(event.x(), event.y())) {
+							double thumbX = this.getX() + this.value * (this.getWidth() - 8);
+							if (event.x() >= thumbX && event.x() <= thumbX + 8) {
+								return super.mouseClicked(event, doubleClick);
+							}
+						}
+						return false;
+					}
 				};
 				this.children.add(slider);
 			}
@@ -91,6 +102,17 @@ public class ConfigEntry extends ConfigList.Entry {
 
 					{
 						this.updateMessage();
+					}
+
+					@Override
+					public boolean mouseClicked(net.minecraft.client.input.MouseButtonEvent event, boolean doubleClick) {
+						if (this.isMouseOver(event.x(), event.y())) {
+							double thumbX = this.getX() + this.value * (this.getWidth() - 8);
+							if (event.x() >= thumbX && event.x() <= thumbX + 8) {
+								return super.mouseClicked(event, doubleClick);
+							}
+						}
+						return false;
 					}
 				};
 				this.children.add(slider);

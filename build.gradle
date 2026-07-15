@@ -8,6 +8,25 @@ repositories {
     maven { url = 'https://maven.terraformersmc.com/' }
 }
 
+tasks.register('collectReleaseArtifacts', Copy) {
+    group = 'build'
+    description = 'Collects the fabric and neoforge loader jars into the release directory.'
+    dependsOn(':fabric:build', ':neoforge:build')
+    from("${project(':fabric').buildDir}/libs") {
+        include "*.jar"
+        exclude "*sources*.jar"
+    }
+    from("${project(':neoforge').buildDir}/libs") {
+        include "*.jar"
+        exclude "*sources*.jar"
+    }
+    into file("${rootProject.projectDir}/release")
+}
+
+tasks.named('build') {
+    dependsOn('collectReleaseArtifacts')
+}
+
 dependencies {
     // implementation(project(path: ':common', configuration: 'default'))
     // implementation(project(path: ':fabric', configuration: 'default'))
