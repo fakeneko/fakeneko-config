@@ -159,33 +159,43 @@ public class ConfigEntry extends ConfigList.Entry {
 		box.setResponder(responder::accept);
 		this.children.add(box);
 		this.refreshers.add(() -> {
+			String text = this.screen.getEffectiveValue(stringConfig);
+			if (box.getValue().equals(text)) {
+				return;
+			}
 			box.setResponder(null);
-			box.setValue(this.screen.getEffectiveValue(stringConfig));
+			box.setValue(text);
 			box.setResponder(responder::accept);
 		});
 	}
 
 	private void createStringListWidget(StringListConfig stringListConfig) {
 		EditBox box = new EditBox(Minecraft.getInstance().font, 0, 0, 150, 20, Component.empty());
-		java.util.function.Consumer<String> responder = value -> {
-			String[] split = value.split(",");
-			List<String> list = new ArrayList<>();
-			for (String s : split) {
-				String trimmed = s.trim();
-				if (!trimmed.isEmpty()) {
-					list.add(trimmed);
-				}
-			}
-			this.screen.setPendingValue(stringListConfig, list);
-		};
+		java.util.function.Consumer<String> responder = value -> this.screen.setPendingValue(stringListConfig, parseStringList(value));
 		box.setValue(String.join(", ", this.screen.getEffectiveValue(stringListConfig)));
 		box.setResponder(responder::accept);
 		this.children.add(box);
 		this.refreshers.add(() -> {
+			List<String> effective = this.screen.getEffectiveValue(stringListConfig);
+			if (parseStringList(box.getValue()).equals(effective)) {
+				return;
+			}
 			box.setResponder(null);
-			box.setValue(String.join(", ", this.screen.getEffectiveValue(stringListConfig)));
+			box.setValue(String.join(", ", effective));
 			box.setResponder(responder::accept);
 		});
+	}
+
+	private static List<String> parseStringList(String value) {
+		String[] split = value.split(",");
+		List<String> list = new ArrayList<>();
+		for (String s : split) {
+			String trimmed = s.trim();
+			if (!trimmed.isEmpty()) {
+				list.add(trimmed);
+			}
+		}
+		return list;
 	}
 
 	private void createHotkeyWidget(HotkeyConfig hotkeyConfig) {

@@ -30,5 +30,6 @@
   "config.fakeneko_config.toggle_hotkey": "Toggle Hotkey",
   "config.fakeneko_config.hotkey.title": "Set Hotkey",
   "config.fakeneko_config.hotkey.press": "Click the key above to record",
+  "config.fakeneko_config.hotkey.esc_hint": "Esc to cancel · Enter to save",
   "config.fakeneko_config.open": "Open Config"
 }

@@ -120,7 +120,7 @@ public class InputKeys extends AbstractCollection<InputConstants.Key> {
 	@Override
 	public String toString() {
 		if (this.keys.isEmpty()) {
-			return InputConstants.UNKNOWN.getName();
+			return "";
 		}
 		return String.join(SEPARATOR_STR, this.keys.stream().map(InputKeys::toShortName).toList());
 	}
@@ -148,7 +148,7 @@ public class InputKeys extends AbstractCollection<InputConstants.Key> {
 	}
 
 	public static InputKeys fromString(String value) {
-		if (value == null || value.isBlank()) {
+		if (value == null || value.isBlank() || value.equals(InputConstants.UNKNOWN.getName())) {
 			return EMPTY;
 		}
 		String[] parts = value.split("\\+");

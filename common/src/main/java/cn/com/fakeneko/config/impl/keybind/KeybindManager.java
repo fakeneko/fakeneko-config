@@ -83,6 +83,13 @@ public class KeybindManager {
 		}
 	}
 
+	public static void releaseAll() {
+		held.clear();
+		for (Keybind keybind : keybinds.values()) {
+			keybind.release();
+		}
+	}
+
 	private static boolean areKeysHeld(InputKeys keys) {
 		for (InputConstants.Key key : keys) {
 			if (!held.contains(key)) {

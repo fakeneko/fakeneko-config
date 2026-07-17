@@ -5,7 +5,6 @@ import com.google.gson.GsonBuilder;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
-import com.google.gson.JsonParseException;
 import cn.com.fakeneko.config.api.Config;
 import cn.com.fakeneko.config.api.ConfigCategory;
 import cn.com.fakeneko.config.api.ConfigManager;
@@ -86,17 +85,22 @@ public class ConfigManagerImpl implements ConfigManager {
 		}
 
 		try (var reader = Files.newBufferedReader(this.configPath)) {
-			JsonObject root = JsonParser.parseReader(reader).getAsJsonObject();
+			JsonElement rootElement = JsonParser.parseReader(reader);
+			if (!rootElement.isJsonObject()) {
+				LOGGER.error("Config file root is not a JSON object, keeping defaults: {}", this.configPath);
+				return;
+			}
+			JsonObject root = rootElement.getAsJsonObject();
 			for (ConfigCategory category : this.categories.values()) {
-				JsonObject categoryObject = root.getAsJsonObject(category.name());
-				if (categoryObject == null) {
+				JsonElement categoryElement = root.get(category.name());
+				if (!(categoryElement instanceof JsonObject categoryObject)) {
 					continue;
 				}
 				for (Config<?> config : category.configs()) {
 					this.loadConfig(config, categoryObject);
 				}
 			}
-		} catch (IOException | JsonParseException e) {
+		} catch (IOException | RuntimeException e) {
 			LOGGER.error("Failed to load config: {}", this.configPath, e);
 		}
 	}

@@ -16,6 +16,7 @@ import java.util.List;
 public class HotkeyScreen extends Screen {
 	private static final Component TITLE = Component.translatable("config.fakeneko_config.hotkey.title");
 	private static final Component PRESS = Component.translatable("config.fakeneko_config.hotkey.press");
+	private static final Component ESC_HINT = Component.translatable("config.fakeneko_config.hotkey.esc_hint");
 	private static final Component RESET = Component.translatable("config.fakeneko_config.reset_single");
 	private static final Component DONE = Component.translatable("gui.done");
 
@@ -54,7 +55,8 @@ public class HotkeyScreen extends Screen {
 	@Override
 	public boolean keyPressed(net.minecraft.client.input.KeyEvent event) {
 		if (event.key() == InputConstants.KEY_ESCAPE) {
-			return super.keyPressed(event);
+			this.minecraft.gui.setScreen(this.lastScreen);
+			return true;
 		}
 		if (event.key() == InputConstants.KEY_RETURN || event.key() == InputConstants.KEY_NUMPADENTER) {
 			this.onClose();
@@ -122,6 +124,7 @@ public class HotkeyScreen extends Screen {
 	public void extractRenderState(GuiGraphicsExtractor graphics, int mouseX, int mouseY, float a) {
 		graphics.text(Minecraft.getInstance().font, this.title, this.width / 2 - this.font.width(this.title) / 2, 20, -1);
 		graphics.text(Minecraft.getInstance().font, PRESS, this.width / 2 - this.font.width(PRESS) / 2, this.height / 2 - 55, 0xFFAAAAAA);
+		graphics.text(Minecraft.getInstance().font, ESC_HINT, this.width / 2 - this.font.width(ESC_HINT) / 2, this.height / 2 - 43, 0xFFAAAAAA);
 		for (GuiEventListener child : this.children()) {
 			if (child instanceof net.minecraft.client.gui.components.Renderable renderable) {
 				renderable.extractRenderState(graphics, mouseX, mouseY, a);

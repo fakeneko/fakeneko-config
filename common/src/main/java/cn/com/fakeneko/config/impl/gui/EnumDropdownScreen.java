@@ -47,6 +47,11 @@ public class EnumDropdownScreen<E extends Enum<E>> extends Screen {
 	}
 
 	@Override
+	public void onClose() {
+		this.minecraft.gui.setScreen(this.lastScreen);
+	}
+
+	@Override
 	public void extractRenderState(GuiGraphicsExtractor graphics, int mouseX, int mouseY, float a) {
 		graphics.text(Minecraft.getInstance().font, this.title, this.width / 2 - this.font.width(this.title) / 2, 20, -1);
 		for (GuiEventListener child : this.children()) {
