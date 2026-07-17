@@ -7,7 +7,7 @@
 ## 特性
 
 - 纯 Java，只依赖 Minecraft 与 Gson
-- 支持 Boolean / Integer / Double / String / StringList / Hotkey 配置类型
+- 支持 Boolean / Integer / Double / String / StringList / Hotkey / Enum 配置类型
 - 自动 JSON 序列化与反序列化
 - 自动生成配置 GUI
 - 支持分类、默认值、重置、变更回调
@@ -84,12 +84,13 @@ public static BooleanConfig ENABLED = new BooleanConfig(
 
 | 类型 | 对应类 | 编辑控件 |
 | --- | --- | --- |
-| Boolean | `BooleanConfig` | 开关按钮 |
+| Boolean | `BooleanConfig` | 开关按钮（开启绿色、关闭红色） |
 | Integer | `IntegerConfig` | 滑块（带范围） |
 | Double | `DoubleConfig` | 滑块（带范围） |
 | String | `StringConfig` | 文本输入框 |
 | String List | `StringListConfig` | 逗号分隔文本输入框 |
 | Hotkey | `HotkeyConfig` | 热键绑定按钮，支持组合键 |
+| Enum | `EnumConfig` | 循环按钮 或 下拉菜单（2~8 个枚举值） |
 
 ## 依赖接入
 
@@ -308,6 +309,42 @@ blacklist.set(List.of("minecraft:stone", "minecraft:dirt"));
 
 GUI 中编辑为逗号分隔的字符串。
 
+### EnumConfig
+
+```java
+public enum RenderMode { FANCY, FAST, FABULOUS }
+
+EnumConfig<RenderMode> renderMode = new EnumConfig<>(
+    "render_mode",
+    Component.translatable("config.my_mod_id.render_mode"),
+    GENERAL,
+    RenderMode.FANCY
+);
+// 默认使用循环按钮（CYCLIC），点击切换下一个值
+
+// 使用下拉菜单：
+EnumConfig<RenderMode> renderMode = new EnumConfig<>(
+    "render_mode",
+    Component.translatable("config.my_mod_id.render_mode"),
+    GENERAL,
+    RenderMode.FANCY,
+    EnumWidget.DROPDOWN
+);
+
+// 自定义显示文本：
+EnumConfig<RenderMode> renderMode = new EnumConfig<>(
+    "render_mode",
+    Component.translatable("config.my_mod_id.render_mode"),
+    GENERAL,
+    RenderMode.FANCY,
+    EnumWidget.CYCLIC,
+    value -> Component.translatable("config.my_mod_id.render_mode." + value.name().toLowerCase())
+);
+renderMode.set(RenderMode.FAST);
+```
+
+枚举值数量限制为 2~8 个。
+
 ### HotkeyConfig
 
 见下文 [组合键热键](#组合键热键)。
@@ -406,7 +443,10 @@ public static void openConfig(Screen parent) {
 - 分类标题：所有配置项按分类分组显示，分类名使用 `Component.translatable`。
 - 配置项左侧显示 `Config.displayName()`，支持 `Component.translatable` 翻译。
 - 各类型编辑控件：见 [支持类型](#支持类型)。
-- 每个配置项右侧有 `Reset`（`重置`）按钮恢复默认值。
+- 每个配置项右侧有 `Reset`（`重置`）按钮恢复默认值；若配置项已等于默认值则按钮禁用。
+- 已修改的配置项显示黄色半透明背景高亮。
+- Boolean 开关按钮：开启显示绿色文字、关闭显示红色文字。
+- 支持 Enum 循环按钮或下拉菜单。
 - 底部左侧为 `Cancel`（`取消`）直接返回，右侧为 `Done`（`完成`）保存并退出；`Done` 只有在配置发生修改时才能点击。
 
 ## 加载与保存
@@ -439,9 +479,9 @@ MANAGER.resetAll(); // 重置所有配置为默认值
 
 ### 构建产物位置
 
-- `common/build/libs/fakeneko_config-common-26.2-1.0.0.jar`
-- `fabric/build/libs/fakeneko_config-fabric-26.2-1.0.0.jar`
-- `neoforge/build/libs/fakeneko_config-neoforge-26.2-1.0.0.jar`
+- `common/build/libs/fakeneko_config-common-26.2-1.0.3.jar`
+- `fabric/build/libs/fakeneko_config-fabric-26.2-1.0.3.jar`
+- `neoforge/build/libs/fakeneko_config-neoforge-26.2-1.0.3.jar`
 
 ### 在 Fabric 中开发
 

@@ -9,7 +9,7 @@ A lightweight, MaLiLib-like Minecraft configuration library for Fabric and NeoFo
 ## Features
 
 - Pure Java, only depends on Minecraft and Gson
-- Supports Boolean / Integer / Double / String / StringList / Hotkey config types
+- Supports Boolean / Integer / Double / String / StringList / Hotkey / Enum config types
 - Automatic JSON serialization and deserialization
 - Automatic configuration GUI generation
 - Supports categories, default values, reset, and change callbacks
@@ -88,12 +88,13 @@ Supports both Fabric and NeoForge for Minecraft 26.2. The library only depends o
 
 | Type | Class | Editor Widget |
 | --- | --- | --- |
-| Boolean | `BooleanConfig` | Toggle button |
+| Boolean | `BooleanConfig` | Toggle button (green for on, red for off) |
 | Integer | `IntegerConfig` | Slider (with range) |
 | Double | `DoubleConfig` | Slider (with range) |
 | String | `StringConfig` | Text input box |
 | String List | `StringListConfig` | Comma-separated text input box |
 | Hotkey | `HotkeyConfig` | Hotkey binding button with combo-key support |
+| Enum | `EnumConfig` | Cycle button or dropdown menu (2~8 enum values) |
 
 ## Dependency Setup
 
@@ -312,6 +313,42 @@ blacklist.set(List.of("minecraft:stone", "minecraft:dirt"));
 
 In the GUI this is edited as a comma-separated string.
 
+### EnumConfig
+
+```java
+public enum RenderMode { FANCY, FAST, FABULOUS }
+
+EnumConfig<RenderMode> renderMode = new EnumConfig<>(
+    "render_mode",
+    Component.translatable("config.my_mod_id.render_mode"),
+    GENERAL,
+    RenderMode.FANCY
+);
+// Defaults to CYCLIC button - click to cycle through values
+
+// Use dropdown menu:
+EnumConfig<RenderMode> renderMode = new EnumConfig<>(
+    "render_mode",
+    Component.translatable("config.my_mod_id.render_mode"),
+    GENERAL,
+    RenderMode.FANCY,
+    EnumWidget.DROPDOWN
+);
+
+// Custom display text:
+EnumConfig<RenderMode> renderMode = new EnumConfig<>(
+    "render_mode",
+    Component.translatable("config.my_mod_id.render_mode"),
+    GENERAL,
+    RenderMode.FANCY,
+    EnumWidget.CYCLIC,
+    value -> Component.translatable("config.my_mod_id.render_mode." + value.name().toLowerCase())
+);
+renderMode.set(RenderMode.FAST);
+```
+
+Enum value count is limited to 2~8.
+
 ### HotkeyConfig
 
 See [Combo-key Hotkeys](#combo-key-hotkeys) below.
@@ -410,7 +447,10 @@ public static void openConfig(Screen parent) {
 - Category headers: config entries are grouped by category, category names use `Component.translatable`.
 - Left side shows `Config.displayName()`, supports `Component.translatable` translations.
 - Editor widgets for each type: see [Supported Types](#supported-types).
-- Each config entry has a `Reset` button on the right to restore the default value.
+- Each config entry has a `Reset` button on the right to restore the default value; disabled when already at default.
+- Modified config entries are highlighted with a translucent yellow background.
+- Boolean toggle buttons: green text for on, red text for off.
+- Supports Enum cycle buttons or dropdown menus.
 - Bottom-left is `Cancel` (return without saving), bottom-right is `Done` (save and exit); `Done` is only enabled when the config has been modified.
 
 ## Load & Save
@@ -443,9 +483,9 @@ MANAGER.resetAll(); // Reset all configs to their default values
 
 ### Build Output Locations
 
-- `common/build/libs/fakeneko_config-common-26.2-1.0.0.jar`
-- `fabric/build/libs/fakeneko_config-fabric-26.2-1.0.0.jar`
-- `neoforge/build/libs/fakeneko_config-neoforge-26.2-1.0.0.jar`
+- `common/build/libs/fakeneko_config-common-26.2-1.0.3.jar`
+- `fabric/build/libs/fakeneko_config-fabric-26.2-1.0.3.jar`
+- `neoforge/build/libs/fakeneko_config-neoforge-26.2-1.0.3.jar`
 
 ### Fabric Development
 
