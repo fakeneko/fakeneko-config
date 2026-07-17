@@ -20,7 +20,7 @@ public class ConfigScreen extends Screen {
 	private final Screen lastScreen;
 	private final ConfigManager manager;
 	private final java.util.Map<Config<?>, Object> initialValues = new java.util.IdentityHashMap<>();
-	private final java.util.List<Runnable> removers = new java.util.ArrayList<>();
+	private final java.util.Map<Config<?>, Object> pendingValues = new java.util.IdentityHashMap<>();
 	private ConfigList configList;
 	private EditBox searchBox;
 	private Button cancelButton;
@@ -59,10 +59,8 @@ public class ConfigScreen extends Screen {
 		for (ConfigCategory category : this.manager.categories()) {
 			for (Config<?> config : category.configs()) {
 				this.captureInitialValue(config);
-				this.addModificationListener(config);
 				if (config instanceof BooleanConfig booleanConfig && booleanConfig.hotkey() != null) {
 					this.captureInitialValue(booleanConfig.hotkey());
-					this.addModificationListener(booleanConfig.hotkey());
 				}
 			}
 		}
@@ -73,17 +71,49 @@ public class ConfigScreen extends Screen {
 		this.initialValues.put(config, config.get());
 	}
 
-	private <T> void addModificationListener(Config<T> config) {
-		cn.com.fakeneko.config.api.ConfigListener<T> listener = (cfg, from, to) -> this.updateDoneButton();
-		config.addListener(listener);
-		this.removers.add(() -> {
-			if (config instanceof cn.com.fakeneko.config.impl.AbstractConfig) {
-				@SuppressWarnings("unchecked")
-				cn.com.fakeneko.config.impl.AbstractConfig<T> abstractConfig =
-					(cn.com.fakeneko.config.impl.AbstractConfig<T>) config;
-				abstractConfig.removeListener(listener);
-			}
-		});
+	@SuppressWarnings("unchecked")
+	public <T> T getEffectiveValue(Config<T> config) {
+		Object pending = this.pendingValues.get(config);
+		if (pending != null) {
+			return (T) pending;
+		}
+		return config.get();
+	}
+
+	public boolean hasPendingValue(Config<?> config) {
+		return this.pendingValues.containsKey(config);
+	}
+
+	public void setPendingValue(Config<?> config, Object value) {
+		Object initial = this.initialValues.get(config);
+		if (initial == null) {
+			this.pendingValues.put(config, value);
+		} else if (this.areValuesEqual(initial, value)) {
+			this.pendingValues.remove(config);
+		} else {
+			this.pendingValues.put(config, value);
+		}
+		this.configList.refreshEntry(config);
+		this.updateDoneButton();
+	}
+
+	private boolean areValuesEqual(Object a, Object b) {
+		if (a instanceof java.util.List<?> listA && b instanceof java.util.List<?> listB) {
+			return listA.equals(listB);
+		}
+		return java.util.Objects.equals(a, b);
+	}
+
+	private void applyPendingValues() {
+		for (java.util.Map.Entry<Config<?>, Object> entry : this.pendingValues.entrySet()) {
+			this.applyPendingValue(entry.getKey(), entry.getValue());
+		}
+		this.pendingValues.clear();
+	}
+
+	@SuppressWarnings({"unchecked", "rawtypes"})
+	private void applyPendingValue(Config<?> config, Object value) {
+		((Config) config).set(value);
 	}
 
 	@Override
@@ -99,13 +129,18 @@ public class ConfigScreen extends Screen {
 	}
 
 	@Override
-	public void onClose() {
-		for (Runnable remover : this.removers) {
-			remover.run();
+	public boolean keyPressed(net.minecraft.client.input.KeyEvent event) {
+		if (event.key() == com.mojang.blaze3d.platform.InputConstants.KEY_ESCAPE) {
+			this.onCancel();
+			return true;
 		}
-		this.removers.clear();
-		this.initialValues.clear();
-		this.minecraft.gui.setScreen(this.lastScreen);
+		return super.keyPressed(event);
+	}
+
+	@Override
+	public void onClose() {
+		// No-op: Minecraft.setScreen() calls onClose() when opening child screens.
+		// Actual close/cancel is handled by keyPressed(ESC) or the cancel button.
 	}
 
 	public void setScrollAmount(double amount) {
@@ -113,11 +148,16 @@ public class ConfigScreen extends Screen {
 	}
 
 	private void onDone() {
+		this.applyPendingValues();
+		this.pendingValues.clear();
+		this.initialValues.clear();
 		this.manager.save();
 		this.minecraft.gui.setScreen(this.lastScreen);
 	}
 
 	private void onCancel() {
+		this.pendingValues.clear();
+		this.initialValues.clear();
 		this.minecraft.gui.setScreen(this.lastScreen);
 	}
 
@@ -126,11 +166,8 @@ public class ConfigScreen extends Screen {
 		if (initial == null) {
 			return config.isModified();
 		}
-		Object current = config.get();
-		if (current instanceof java.util.List<?> list && initial instanceof java.util.List<?> initialList) {
-			return !list.equals(initialList);
-		}
-		return !initial.equals(current);
+		Object current = this.getEffectiveValue(config);
+		return !this.areValuesEqual(initial, current);
 	}
 
 	public boolean isModifiedFromInitial() {

@@ -1,10 +1,7 @@
 package cn.com.fakeneko.config.impl.gui;
 
-import com.mojang.blaze3d.platform.InputConstants;
 import cn.com.fakeneko.config.api.Config;
 import cn.com.fakeneko.config.impl.keybind.InputKeys;
-import cn.com.fakeneko.config.impl.keybind.KeybindListener;
-import cn.com.fakeneko.config.impl.keybind.KeybindManager;
 import cn.com.fakeneko.config.impl.types.*;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
@@ -27,6 +24,7 @@ public class ConfigEntry extends ConfigList.Entry {
 	private final Config<?> config;
 	private final List<GuiEventListener> children = new ArrayList<>();
 	private final Button resetButton;
+	private final List<Runnable> refreshers = new ArrayList<>();
 
 	public ConfigEntry(ConfigScreen screen, @NotNull Config<?> config) {
 		this.screen = screen;
@@ -38,140 +36,190 @@ public class ConfigEntry extends ConfigList.Entry {
 		this.createWidget();
 	}
 
+	public Config<?> config() {
+		return this.config;
+	}
+
 	private void createWidget() {
 		switch (this.config) {
-			case BooleanConfig booleanConfig -> {
-				Button button = Button.builder(this.booleanLabel(booleanConfig.get()), b -> {
-					booleanConfig.toggle();
-					b.setMessage(this.booleanLabel(booleanConfig.get()));
-				}).bounds(0, 0, 100, 20).build();
-				this.children.add(button);
-				HotkeyConfig hotkey = booleanConfig.hotkey();
-				if (hotkey != null) {
-					Button hotkeyButton = Button.builder(hotkey.get().isEmpty() ? Component.literal("None") : InputKeys.format(hotkey.get()), b -> {
-						Minecraft.getInstance().gui.setScreen(new HotkeyScreen(this.screen, hotkey));
-					}).bounds(0, 0, 60, 20).build();
-					this.children.add(hotkeyButton);
-					hotkey.addListener((config, from, to) -> hotkeyButton.setMessage(to.isEmpty() ? Component.literal("None") : InputKeys.format(to)));
-				}
-			}
-			case IntegerConfig integerConfig -> {
-				AbstractSliderButton slider = new AbstractSliderButton(0, 0, 100, 20, Component.empty(),
-					(integerConfig.get() - integerConfig.min()) / (double) (integerConfig.max() - integerConfig.min())) {
-					@Override
-					protected void applyValue() {
-						int value = integerConfig.min() + (int) Math.round(this.value * (integerConfig.max() - integerConfig.min()));
-						integerConfig.set(value);
-					}
-
-					@Override
-					protected void updateMessage() {
-						this.setMessage(Component.literal(String.valueOf(integerConfig.get())));
-					}
-
-					{
-						this.updateMessage();
-					}
-
-					@Override
-					public boolean mouseClicked(net.minecraft.client.input.MouseButtonEvent event, boolean doubleClick) {
-						if (this.isMouseOver(event.x(), event.y())) {
-							double thumbX = this.getX() + this.value * (this.getWidth() - 8);
-							if (event.x() >= thumbX && event.x() <= thumbX + 8) {
-								return super.mouseClicked(event, doubleClick);
-							}
-						}
-						return false;
-					}
-				};
-				this.children.add(slider);
-			}
-			case DoubleConfig doubleConfig -> {
-				AbstractSliderButton slider = new AbstractSliderButton(0, 0, 100, 20, Component.empty(),
-					(doubleConfig.get() - doubleConfig.min()) / (doubleConfig.max() - doubleConfig.min())) {
-					@Override
-					protected void applyValue() {
-						double value = doubleConfig.min() + this.value * (doubleConfig.max() - doubleConfig.min());
-						doubleConfig.set(value);
-					}
-
-					@Override
-					protected void updateMessage() {
-						this.setMessage(Component.literal(String.format("%.2f", doubleConfig.get())));
-					}
-
-					{
-						this.updateMessage();
-					}
-
-					@Override
-					public boolean mouseClicked(net.minecraft.client.input.MouseButtonEvent event, boolean doubleClick) {
-						if (this.isMouseOver(event.x(), event.y())) {
-							double thumbX = this.getX() + this.value * (this.getWidth() - 8);
-							if (event.x() >= thumbX && event.x() <= thumbX + 8) {
-								return super.mouseClicked(event, doubleClick);
-							}
-						}
-						return false;
-					}
-				};
-				this.children.add(slider);
-			}
-			case StringConfig stringConfig -> {
-				EditBox box = new EditBox(Minecraft.getInstance().font, 0, 0, 150, 20, Component.empty());
-				box.setValue(stringConfig.get());
-				box.setResponder(stringConfig::set);
-				this.children.add(box);
-			}
-			case StringListConfig stringListConfig -> {
-				EditBox box = new EditBox(Minecraft.getInstance().font, 0, 0, 150, 20, Component.empty());
-				box.setValue(String.join(", ", stringListConfig.get()));
-				box.setResponder(value -> {
-					String[] split = value.split(",");
-					List<String> list = new ArrayList<>();
-					for (String s : split) {
-						String trimmed = s.trim();
-						if (!trimmed.isEmpty()) {
-							list.add(trimmed);
-						}
-					}
-					stringListConfig.set(list);
-				});
-				this.children.add(box);
-			}
-			case HotkeyConfig hotkeyConfig -> {
-				Button button = Button.builder(hotkeyConfig.get().isEmpty() ? Component.literal("None") : InputKeys.format(hotkeyConfig.get()), b -> {
-					Minecraft.getInstance().gui.setScreen(new HotkeyScreen(this.screen, hotkeyConfig));
-				}).bounds(0, 0, 100, 20).build();
-				this.children.add(button);
-			}
+			case BooleanConfig booleanConfig -> this.createBooleanWidget(booleanConfig);
+			case IntegerConfig integerConfig -> this.createIntegerWidget(integerConfig);
+			case DoubleConfig doubleConfig -> this.createDoubleWidget(doubleConfig);
+			case StringConfig stringConfig -> this.createStringWidget(stringConfig);
+			case StringListConfig stringListConfig -> this.createStringListWidget(stringListConfig);
+			case HotkeyConfig hotkeyConfig -> this.createHotkeyWidget(hotkeyConfig);
 			case EnumConfig<?> enumConfig -> this.createEnumWidget(enumConfig);
 			default -> {
 				// Unsupported type
 			}
 		}
+		this.refresh();
+	}
+
+	private void createBooleanWidget(BooleanConfig booleanConfig) {
+		Button button = Button.builder(this.booleanLabel(this.screen.getEffectiveValue(booleanConfig)), b -> {
+			boolean current = this.screen.getEffectiveValue(booleanConfig);
+			this.screen.setPendingValue(booleanConfig, !current);
+		}).bounds(0, 0, 100, 20).build();
+		this.children.add(button);
+		this.refreshers.add(() -> button.setMessage(this.booleanLabel(this.screen.getEffectiveValue(booleanConfig))));
+
+		HotkeyConfig hotkey = booleanConfig.hotkey();
+		if (hotkey != null) {
+			Button hotkeyButton = Button.builder(Component.empty(), b -> {
+				Minecraft.getInstance().gui.setScreen(new HotkeyScreen(this.screen, hotkey, this.screen.getEffectiveValue(hotkey), value -> this.screen.setPendingValue(hotkey, value)));
+			}).bounds(0, 0, 60, 20).build();
+			this.children.add(hotkeyButton);
+			this.refreshers.add(() -> hotkeyButton.setMessage(this.formatHotkey(this.screen.getEffectiveValue(hotkey))));
+		}
+	}
+
+	private void createIntegerWidget(IntegerConfig integerConfig) {
+		var slider = new AbstractSliderButton(0, 0, 100, 20, Component.empty(),
+			(this.screen.getEffectiveValue(integerConfig) - integerConfig.min()) / (double) (integerConfig.max() - integerConfig.min())) {
+			@Override
+			protected void applyValue() {
+				int value = integerConfig.min() + (int) Math.round(this.value * (integerConfig.max() - integerConfig.min()));
+				ConfigEntry.this.screen.setPendingValue(integerConfig, value);
+			}
+
+			@Override
+			protected void updateMessage() {
+				this.setMessage(Component.literal(String.valueOf(ConfigEntry.this.screen.getEffectiveValue(integerConfig))));
+			}
+
+			public void refresh() {
+				int effective = ConfigEntry.this.screen.getEffectiveValue(integerConfig);
+				this.value = (effective - integerConfig.min()) / (double) (integerConfig.max() - integerConfig.min());
+				this.updateMessage();
+			}
+
+			{
+				this.updateMessage();
+			}
+
+			@Override
+			public boolean mouseClicked(net.minecraft.client.input.MouseButtonEvent event, boolean doubleClick) {
+				if (this.isMouseOver(event.x(), event.y())) {
+					double thumbX = this.getX() + this.value * (this.getWidth() - 8);
+					if (event.x() >= thumbX && event.x() <= thumbX + 8) {
+						return super.mouseClicked(event, doubleClick);
+					}
+				}
+				return false;
+			}
+		};
+		this.children.add(slider);
+		this.refreshers.add(() -> slider.refresh());
+	}
+
+	private void createDoubleWidget(DoubleConfig doubleConfig) {
+		var slider = new AbstractSliderButton(0, 0, 100, 20, Component.empty(),
+			(this.screen.getEffectiveValue(doubleConfig) - doubleConfig.min()) / (doubleConfig.max() - doubleConfig.min())) {
+			@Override
+			protected void applyValue() {
+				double value = doubleConfig.min() + this.value * (doubleConfig.max() - doubleConfig.min());
+				ConfigEntry.this.screen.setPendingValue(doubleConfig, value);
+			}
+
+			@Override
+			protected void updateMessage() {
+				this.setMessage(Component.literal(String.format("%.2f", ConfigEntry.this.screen.getEffectiveValue(doubleConfig))));
+			}
+
+			public void refresh() {
+				double effective = ConfigEntry.this.screen.getEffectiveValue(doubleConfig);
+				this.value = (effective - doubleConfig.min()) / (doubleConfig.max() - doubleConfig.min());
+				this.updateMessage();
+			}
+
+			{
+				this.updateMessage();
+			}
+
+			@Override
+			public boolean mouseClicked(net.minecraft.client.input.MouseButtonEvent event, boolean doubleClick) {
+				if (this.isMouseOver(event.x(), event.y())) {
+					double thumbX = this.getX() + this.value * (this.getWidth() - 8);
+					if (event.x() >= thumbX && event.x() <= thumbX + 8) {
+						return super.mouseClicked(event, doubleClick);
+					}
+				}
+				return false;
+			}
+		};
+		this.children.add(slider);
+		this.refreshers.add(() -> slider.refresh());
+	}
+
+	private void createStringWidget(StringConfig stringConfig) {
+		EditBox box = new EditBox(Minecraft.getInstance().font, 0, 0, 150, 20, Component.empty());
+		java.util.function.Consumer<String> responder = value -> this.screen.setPendingValue(stringConfig, value);
+		box.setValue(this.screen.getEffectiveValue(stringConfig));
+		box.setResponder(responder::accept);
+		this.children.add(box);
+		this.refreshers.add(() -> {
+			box.setResponder(null);
+			box.setValue(this.screen.getEffectiveValue(stringConfig));
+			box.setResponder(responder::accept);
+		});
+	}
+
+	private void createStringListWidget(StringListConfig stringListConfig) {
+		EditBox box = new EditBox(Minecraft.getInstance().font, 0, 0, 150, 20, Component.empty());
+		java.util.function.Consumer<String> responder = value -> {
+			String[] split = value.split(",");
+			List<String> list = new ArrayList<>();
+			for (String s : split) {
+				String trimmed = s.trim();
+				if (!trimmed.isEmpty()) {
+					list.add(trimmed);
+				}
+			}
+			this.screen.setPendingValue(stringListConfig, list);
+		};
+		box.setValue(String.join(", ", this.screen.getEffectiveValue(stringListConfig)));
+		box.setResponder(responder::accept);
+		this.children.add(box);
+		this.refreshers.add(() -> {
+			box.setResponder(null);
+			box.setValue(String.join(", ", this.screen.getEffectiveValue(stringListConfig)));
+			box.setResponder(responder::accept);
+		});
+	}
+
+	private void createHotkeyWidget(HotkeyConfig hotkeyConfig) {
+		Button button = Button.builder(Component.empty(), b -> {
+			Minecraft.getInstance().gui.setScreen(new HotkeyScreen(this.screen, hotkeyConfig, this.screen.getEffectiveValue(hotkeyConfig), value -> this.screen.setPendingValue(hotkeyConfig, value)));
+		}).bounds(0, 0, 100, 20).build();
+		this.children.add(button);
+		this.refreshers.add(() -> button.setMessage(this.formatHotkey(this.screen.getEffectiveValue(hotkeyConfig))));
 	}
 
 	@SuppressWarnings({"unchecked", "rawtypes"})
 	private <E extends Enum<E>> void createEnumWidget(EnumConfig<E> enumConfig) {
 		E[] values = enumConfig.values();
 		if (enumConfig.widget() == EnumWidget.CYCLIC) {
-			Button button = Button.builder(enumConfig.displayValue(enumConfig.get()), b -> {
-				E current = enumConfig.get();
+			Button button = Button.builder(Component.empty(), b -> {
+				E current = this.screen.getEffectiveValue(enumConfig);
 				int next = (current.ordinal() + 1) % values.length;
-				enumConfig.set(values[next]);
-				b.setMessage(enumConfig.displayValue(enumConfig.get()));
+				this.screen.setPendingValue(enumConfig, values[next]);
 			}).bounds(0, 0, 100, 20).build();
 			this.children.add(button);
+			this.refreshers.add(() -> button.setMessage(enumConfig.displayValue(this.screen.getEffectiveValue(enumConfig))));
 		} else {
-			Button button = Button.builder(enumConfig.displayValue(enumConfig.get()), b -> {
+			Button button = Button.builder(Component.empty(), b -> {
 				Minecraft.getInstance().gui.setScreen(new EnumDropdownScreen<>(this.screen, enumConfig, (E selected) -> {
-					enumConfig.set(selected);
+					this.screen.setPendingValue(enumConfig, selected);
 				}));
 			}).bounds(0, 0, 100, 20).build();
-			enumConfig.addListener((cfg, from, to) -> button.setMessage(enumConfig.displayValue(to)));
 			this.children.add(button);
+			this.refreshers.add(() -> button.setMessage(enumConfig.displayValue(this.screen.getEffectiveValue(enumConfig))));
 		}
+	}
+
+	private Component formatHotkey(InputKeys keys) {
+		return keys.isEmpty() ? Component.literal("None") : InputKeys.format(keys);
 	}
 
 	private Component booleanLabel(boolean value) {
@@ -182,21 +230,38 @@ public class ConfigEntry extends ConfigList.Entry {
 	}
 
 	private void onReset() {
-		this.config.reset();
-		this.children.clear();
-		this.children.add(this.resetButton);
-		this.createWidget();
-	}
-
-	void updateNarration(NarrationElementOutput output) {
-		output.add(NarratedElementType.TITLE, Component.literal(this.config.name()));
+		if (this.config instanceof BooleanConfig booleanConfig && booleanConfig.hotkey() != null) {
+			this.screen.setPendingValue(booleanConfig, booleanConfig.defaultValue());
+			this.screen.setPendingValue(booleanConfig.hotkey(), booleanConfig.hotkey().defaultValue());
+		} else {
+			this.screen.setPendingValue(this.config, this.config.defaultValue());
+		}
+		this.refresh();
 	}
 
 	private boolean isModified() {
 		if (this.config instanceof BooleanConfig booleanConfig && booleanConfig.hotkey() != null) {
-			return this.config.isModified() || booleanConfig.hotkey().isModified();
+			return !this.valuesEqual(this.screen.getEffectiveValue(booleanConfig), booleanConfig.defaultValue())
+				|| !this.valuesEqual(this.screen.getEffectiveValue(booleanConfig.hotkey()), booleanConfig.hotkey().defaultValue());
 		}
-		return this.config.isModified();
+		return !this.valuesEqual(this.screen.getEffectiveValue(this.config), this.config.defaultValue());
+	}
+
+	private boolean valuesEqual(Object a, Object b) {
+		if (a instanceof java.util.List<?> listA && b instanceof java.util.List<?> listB) {
+			return listA.equals(listB);
+		}
+		return java.util.Objects.equals(a, b);
+	}
+
+	public void refresh() {
+		for (Runnable refresher : this.refreshers) {
+			refresher.run();
+		}
+	}
+
+	void updateNarration(NarrationElementOutput output) {
+		output.add(NarratedElementType.TITLE, Component.literal(this.config.name()));
 	}
 
 	private boolean isModifiedFromInitial() {

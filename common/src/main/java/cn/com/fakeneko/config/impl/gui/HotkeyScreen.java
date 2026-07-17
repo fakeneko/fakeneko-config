@@ -21,17 +21,19 @@ public class HotkeyScreen extends Screen {
 
 	private final ConfigScreen lastScreen;
 	private final HotkeyConfig config;
+	private final java.util.function.Consumer<InputKeys> onComplete;
 	private Button keyButton;
 	private Button resetButton;
 	private Button doneButton;
 	private final List<InputConstants.Key> recording = new ArrayList<>();
 	private boolean recordingState;
 
-	public HotkeyScreen(ConfigScreen lastScreen, HotkeyConfig config) {
+	public HotkeyScreen(ConfigScreen lastScreen, HotkeyConfig config, InputKeys initialValue, java.util.function.Consumer<InputKeys> onComplete) {
 		super(TITLE);
 		this.lastScreen = lastScreen;
 		this.config = config;
-		this.recording.addAll(this.config.get());
+		this.onComplete = onComplete;
+		this.recording.addAll(initialValue);
 	}
 
 	@Override
@@ -129,7 +131,7 @@ public class HotkeyScreen extends Screen {
 
 	@Override
 	public void onClose() {
-		this.config.set(new InputKeys(this.recording));
+		this.onComplete.accept(new InputKeys(this.recording));
 		this.minecraft.gui.setScreen(this.lastScreen);
 	}
 }

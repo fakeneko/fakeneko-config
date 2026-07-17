@@ -31,6 +31,15 @@ public class ConfigList extends ContainerObjectSelectionList<ConfigList.Entry> {
 		this.refreshEntries();
 	}
 
+	public void refreshEntry(Config<?> config) {
+		for (Entry entry : this.allEntries) {
+			if (entry instanceof ConfigEntry configEntry && configEntry.config() == config) {
+				configEntry.refresh();
+				return;
+			}
+		}
+	}
+
 	public void refreshEntries() {
 		this.allEntries.clear();
 		for (ConfigCategory category : this.screen.manager().categories()) {
