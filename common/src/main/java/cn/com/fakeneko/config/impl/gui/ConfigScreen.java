@@ -20,6 +20,7 @@ public class ConfigScreen extends Screen {
 	private final Screen lastScreen;
 	private final ConfigManager manager;
 	private final java.util.Map<Config<?>, Object> initialValues = new java.util.IdentityHashMap<>();
+	private final java.util.List<Runnable> removers = new java.util.ArrayList<>();
 	private ConfigList configList;
 	private EditBox searchBox;
 	private Button cancelButton;
@@ -73,7 +74,16 @@ public class ConfigScreen extends Screen {
 	}
 
 	private <T> void addModificationListener(Config<T> config) {
-		config.addListener((cfg, from, to) -> this.updateDoneButton());
+		cn.com.fakeneko.config.api.ConfigListener<T> listener = (cfg, from, to) -> this.updateDoneButton();
+		config.addListener(listener);
+		this.removers.add(() -> {
+			if (config instanceof cn.com.fakeneko.config.impl.AbstractConfig) {
+				@SuppressWarnings("unchecked")
+				cn.com.fakeneko.config.impl.AbstractConfig<T> abstractConfig =
+					(cn.com.fakeneko.config.impl.AbstractConfig<T>) config;
+				abstractConfig.removeListener(listener);
+			}
+		});
 	}
 
 	@Override
@@ -90,6 +100,11 @@ public class ConfigScreen extends Screen {
 
 	@Override
 	public void onClose() {
+		for (Runnable remover : this.removers) {
+			remover.run();
+		}
+		this.removers.clear();
+		this.initialValues.clear();
 		this.minecraft.gui.setScreen(this.lastScreen);
 	}
 

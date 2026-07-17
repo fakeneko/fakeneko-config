@@ -85,4 +85,8 @@ public abstract class AbstractConfig<T> implements Config<T> {
 	public void addListener(@NotNull ConfigListener<T> listener) {
 		this.listeners.add(listener);
 	}
+
+	public void removeListener(@NotNull ConfigListener<T> listener) {
+		this.listeners.remove(listener);
+	}
 }

@@ -154,6 +154,7 @@ public class ConfigManagerImpl implements ConfigManager {
 			case StringConfig ignored -> StringConfig.SERIALIZER;
 			case StringListConfig ignored -> StringListConfig.SERIALIZER;
 			case HotkeyConfig ignored -> HotkeyConfig.SERIALIZER;
+			case EnumConfig<?> enumConfig -> (ConfigSerializer<T>) enumConfig.serializer();
 			default -> null;
 		};
 	}

@@ -27,6 +27,22 @@ public class TestConfig {
 	public static final StringConfig MODE = new StringConfig("mode", Component.translatable("config.fakeneko_config.mode"), GENERAL, "default");
 	public static final StringConfig PREFIX = new StringConfig("prefix", Component.translatable("config.fakeneko_config.prefix"), GENERAL, "[Test]");
 	public static final StringListConfig BLACKLIST = new StringListConfig("blacklist", Component.translatable("config.fakeneko_config.blacklist"), GENERAL, java.util.List.of("example:block"));
+	public static final EnumConfig<RenderMode> RENDER_MODE = new EnumConfig<>(
+		"render_mode",
+		Component.translatable("config.fakeneko_config.render_mode"),
+		GENERAL,
+		RenderMode.FANCY,
+		EnumWidget.DROPDOWN,
+		e -> Component.translatable("config.fakeneko_config.render_mode." + e.name().toLowerCase())
+	);
+	public static final EnumConfig<TooltipPosition> TOOLTIP_POSITION = new EnumConfig<>(
+		"tooltip_position",
+		Component.translatable("config.fakeneko_config.tooltip_position"),
+		GENERAL,
+		TooltipPosition.TOP_RIGHT,
+		EnumWidget.CYCLIC,
+		e -> Component.translatable("config.fakeneko_config.tooltip_position." + e.name().toLowerCase())
+	);
 	public static final HotkeyConfig TOGGLE_HOTKEY = new HotkeyConfig(
 		"toggle_hotkey",
 		Component.translatable("config.fakeneko_config.toggle_hotkey"),
@@ -35,6 +51,19 @@ public class TestConfig {
 		FakenekoConfig.id("toggle"),
 		keybind -> LOGGER.info("Hotkey pressed: {}", keybind.name().getString())
 	);
+
+	public enum RenderMode {
+		FAST,
+		FANCY,
+		FABULOUS
+	}
+
+	public enum TooltipPosition {
+		TOP_LEFT,
+		TOP_RIGHT,
+		BOTTOM_LEFT,
+		BOTTOM_RIGHT
+	}
 
 	static {
 		MANAGER.load();

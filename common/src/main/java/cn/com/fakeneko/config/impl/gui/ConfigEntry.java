@@ -145,9 +145,32 @@ public class ConfigEntry extends ConfigList.Entry {
 				}).bounds(0, 0, 100, 20).build();
 				this.children.add(button);
 			}
+			case EnumConfig<?> enumConfig -> this.createEnumWidget(enumConfig);
 			default -> {
 				// Unsupported type
 			}
+		}
+	}
+
+	@SuppressWarnings({"unchecked", "rawtypes"})
+	private <E extends Enum<E>> void createEnumWidget(EnumConfig<E> enumConfig) {
+		E[] values = enumConfig.values();
+		if (enumConfig.widget() == EnumWidget.CYCLIC) {
+			Button button = Button.builder(enumConfig.displayValue(enumConfig.get()), b -> {
+				E current = enumConfig.get();
+				int next = (current.ordinal() + 1) % values.length;
+				enumConfig.set(values[next]);
+				b.setMessage(enumConfig.displayValue(enumConfig.get()));
+			}).bounds(0, 0, 100, 20).build();
+			this.children.add(button);
+		} else {
+			Button button = Button.builder(enumConfig.displayValue(enumConfig.get()), b -> {
+				Minecraft.getInstance().gui.setScreen(new EnumDropdownScreen<>(this.screen, enumConfig, (E selected) -> {
+					enumConfig.set(selected);
+				}));
+			}).bounds(0, 0, 100, 20).build();
+			enumConfig.addListener((cfg, from, to) -> button.setMessage(enumConfig.displayValue(to)));
+			this.children.add(button);
 		}
 	}
 
