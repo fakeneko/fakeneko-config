@@ -1,3 +1,16 @@
+plugins {
+    id 'base'
+}
+
+// Warn if the Gradle daemon is not running on JDK 17.
+// This project requires JDK 17 at runtime for Gradle + Minecraft 1.18.
+// Set JAVA_HOME before running gradlew, or use gradle-local.properties:
+//   org.gradle.java.home=D:/path/to/jdk-17
+if (!JavaVersion.current().isCompatibleWith(JavaVersion.VERSION_17)) {
+    logger.warn("⚠ Gradle daemon is running on JDK ${JavaVersion.current()}. " +
+        "Set JAVA_HOME to JDK 17 or add 'org.gradle.java.home=...' to gradle-local.properties.")
+}
+
 subprojects {
     
     apply plugin: 'java'
@@ -72,4 +85,25 @@ subprojects {
 
         enabled = false
     }
+}
+
+tasks.register('collectReleaseArtifacts', Copy) {
+    group = 'build'
+    description = 'Collects the fabric and forge loader jars into the release directory.'
+    dependsOn(':Fabric:build', ':Forge:build')
+    from("${project(':Fabric').buildDir}/libs") {
+        include "*.jar"
+        exclude "*sources*.jar"
+        exclude "*javadoc*.jar"
+    }
+    from("${project(':Forge').buildDir}/libs") {
+        include "*.jar"
+        exclude "*sources*.jar"
+        exclude "*javadoc*.jar"
+    }
+    into file("${rootProject.projectDir}/release")
+}
+
+tasks.named('build') {
+    dependsOn('collectReleaseArtifacts')
 }
