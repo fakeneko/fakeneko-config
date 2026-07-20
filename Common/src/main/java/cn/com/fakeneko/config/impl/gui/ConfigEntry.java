@@ -288,47 +288,49 @@ public class ConfigEntry extends ConfigList.Entry {
 
 	@Override
 	public void render(PoseStack poseStack, int index, int top, int left, int width, int height, int mouseX, int mouseY, boolean hovered, float partialTick) {
+		int labelWidth = Math.min(width / 3, 160);
+		int labelX = left + 10;
+		Minecraft.getInstance().font.draw(poseStack, this.config.displayName(), labelX, top + 6, 0xFFFFFF);
+
+		boolean hasHotkey = this.config instanceof BooleanConfig bc && bc.hotkey() != null;
+		int widgetX = left + labelWidth + 10;
+		int widgetRight = left + width - 45; // leave space for reset button
+		int widgetWidth = widgetRight - widgetX;
+
 		if (this.isModifiedFromInitial()) {
 			net.minecraft.client.gui.GuiComponent.fill(poseStack, left, top, left + width, top + height, 0x1A4488FF);
 		}
 		this.resetButton.active = this.isModified();
-		Minecraft.getInstance().font.draw(poseStack, this.config.displayName(), left + 10, top + 6, 0xFFFFFF);
+		this.resetButton.x = left + width - 40;
+		this.resetButton.y = top + 2;
+		this.resetButton.render(poseStack, mouseX, mouseY, partialTick);
+
 		Component description = this.config.description();
 		if (hovered && description != null) {
 			this.screen.renderTooltip(poseStack, description, mouseX, mouseY);
 		}
-		boolean hasHotkey = this.config instanceof BooleanConfig bc && bc.hotkey() != null;
-		int rightEdge = left + width - 10;
-		this.resetButton.x = rightEdge - 40;
-		this.resetButton.y = top + 2;
-		this.resetButton.render(poseStack, mouseX, mouseY, partialTick);
-		// Widgets start at 40% of row width to leave room for the label
-		int widgetStart = left + (int)(width * 0.40);
-		int availableWidth = rightEdge - 45 - widgetStart;
+
 		if (hasHotkey) {
-			int mainWidth = Math.min(availableWidth / 2 - 3, 80);
-			int hotkeyWidth = Math.min(availableWidth / 2 - 3, 60);
-			int mainX = widgetStart;
-			int hotkeyX = mainX + mainWidth + 5;
+			int halfWidth = (widgetWidth - 5) / 2;
 			Button mainButton = (Button) this.children.get(1);
-			mainButton.x = mainX;
+			mainButton.x = widgetX;
 			mainButton.y = top + 2;
-			mainButton.setWidth(mainWidth);
+			mainButton.setWidth(halfWidth);
 			mainButton.render(poseStack, mouseX, mouseY, partialTick);
 			Button hotkeyButton = (Button) this.children.get(2);
-			hotkeyButton.x = hotkeyX;
+			hotkeyButton.x = widgetX + halfWidth + 5;
 			hotkeyButton.y = top + 2;
-			hotkeyButton.setWidth(hotkeyWidth);
+			hotkeyButton.setWidth(halfWidth);
 			hotkeyButton.render(poseStack, mouseX, mouseY, partialTick);
 		} else {
 			for (int i = 1; i < this.children.size(); i++) {
 				GuiEventListener child = this.children.get(i);
 				if (child instanceof AbstractWidget widget) {
-					widget.x = widgetStart;
+					widget.x = widgetX;
 					widget.y = top + 2;
-					widget.setWidth(Math.min(availableWidth, widget.getWidth()));
+					widget.setWidth(widgetWidth);
 					widget.render(poseStack, mouseX, mouseY, partialTick);
-					break; // only one widget (the main one) + reset button
+					break;
 				}
 			}
 		}
