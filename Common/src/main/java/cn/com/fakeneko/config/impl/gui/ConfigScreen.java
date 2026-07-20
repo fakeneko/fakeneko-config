@@ -52,6 +52,9 @@ public class ConfigScreen extends Screen {
 
 	@Override
 	protected void init() {
+		this.clearWidgets();
+		this.tabButtons.clear();
+
 		this.searchBox = new EditBox(this.font, this.width / 2 - 100, 22, 200, 20, SEARCH);
 		this.searchBox.setResponder(value -> {
 			this.searchFilter = value;
