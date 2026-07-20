@@ -25,8 +25,8 @@ D:\workspace\minecarftDev\
 
 | 项 | 规范 | 示例 |
 |---|---|---|
-| 分支 | 以 MC 版本命名 | `26.1`、`26.2`、`1.18.2` |
-| tag | `v{mc版本}-{mod版本}` | `v26.1-1.0.5`、`v1.18.2-1.0.5` |
+| 分支 | 以 MC 版本命名 | `26.1`、`26.2`、`1.18` |
+| tag | `v{mc版本}-{mod版本}` | `v26.1-1.0.5`、`v1.18-1.0.5` |
 | mod 版本 | `gradle.properties` 的 `version` 字段，各分支独立演进 | `1.0.5` |
 
 **发版铁律：不删除旧版本 tag。** 只允许删除/重推"当前正要发布、尚未公开"的那个 tag；新版本直接在对应分支上建新 tag。
@@ -37,7 +37,7 @@ D:\workspace\minecarftDev\
 |---|---|---|---|---|---|---|
 | `26.2` | 26.2 | Fabric + NeoForge | MultiLoader-Template（新版） | 21+ | 9.5.0 | ✅ 基线 |
 | `26.1` | 26.1 | Fabric + NeoForge | 由 26.2 分支改造 | 21+ | 9.5.0 | ✅ 已适配 |
-| `1.18.2` | 1.18.2 | Fabric + Forge | MultiLoader-Template-1.18 | 17 | 8.8 | ✅ 已迁移 |
+| `1.18` | 1.18 | Fabric + Forge | MultiLoader-Template-1.18 | 17 | 8.8 | ✅ 已迁移 |
 
 ## 新版本接入 checklist
 
