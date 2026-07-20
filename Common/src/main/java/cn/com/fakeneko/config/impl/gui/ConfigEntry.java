@@ -302,11 +302,14 @@ public class ConfigEntry extends ConfigList.Entry {
 		this.resetButton.x = rightEdge - 40;
 		this.resetButton.y = top + 2;
 		this.resetButton.render(poseStack, mouseX, mouseY, partialTick);
+		// Widgets start at 40% of row width to leave room for the label
+		int widgetStart = left + (int)(width * 0.40);
+		int availableWidth = rightEdge - 45 - widgetStart;
 		if (hasHotkey) {
-			int mainWidth = 70;
-			int hotkeyWidth = 60;
-			int mainX = rightEdge - 40 - 5 - mainWidth;
-			int hotkeyX = mainX - 5 - hotkeyWidth;
+			int mainWidth = Math.min(availableWidth / 2 - 3, 80);
+			int hotkeyWidth = Math.min(availableWidth / 2 - 3, 60);
+			int mainX = widgetStart;
+			int hotkeyX = mainX + mainWidth + 5;
 			Button mainButton = (Button) this.children.get(1);
 			mainButton.x = mainX;
 			mainButton.y = top + 2;
@@ -321,10 +324,11 @@ public class ConfigEntry extends ConfigList.Entry {
 			for (int i = 1; i < this.children.size(); i++) {
 				GuiEventListener child = this.children.get(i);
 				if (child instanceof AbstractWidget widget) {
-					int widgetWidth = widget.getWidth();
-					widget.x = rightEdge - 40 - 5 - widgetWidth;
+					widget.x = widgetStart;
 					widget.y = top + 2;
+					widget.setWidth(Math.min(availableWidth, widget.getWidth()));
 					widget.render(poseStack, mouseX, mouseY, partialTick);
+					break; // only one widget (the main one) + reset button
 				}
 			}
 		}

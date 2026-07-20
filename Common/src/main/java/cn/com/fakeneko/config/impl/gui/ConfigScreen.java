@@ -220,6 +220,9 @@ public class ConfigScreen extends Screen {
 
 	@Override
 	public void render(PoseStack poseStack, int mouseX, int mouseY, float partialTick) {
+		this.renderBackground(poseStack);
+		// Render search box explicitly before list so it's not covered
+		this.searchBox.render(poseStack, mouseX, mouseY, partialTick);
 		super.render(poseStack, mouseX, mouseY, partialTick);
 		drawCenteredString(poseStack, this.font, this.title, this.width / 2, 8, 0xFFFFFF);
 	}
