@@ -9,6 +9,7 @@ import cn.com.fakeneko.config.impl.keybind.Keybind;
 import cn.com.fakeneko.config.impl.keybind.KeybindListener;
 import cn.com.fakeneko.config.impl.keybind.KeybindManager;
 import net.minecraft.network.chat.Component;
+import cn.com.fakeneko.config.impl.Components;
 import net.minecraft.resources.ResourceLocation;
 import org.jetbrains.annotations.NotNull;
 
@@ -35,7 +36,7 @@ public class HotkeyConfig extends AbstractConfig<InputKeys> {
 	private Keybind keybind;
 
 	public HotkeyConfig(@NotNull String name, @NotNull ConfigCategory category, @NotNull InputKeys defaultValue, @NotNull ResourceLocation keybindId) {
-		this(name, Component.literal(name), category, defaultValue, keybindId, null, true);
+		this(name, Components.literal(name), category, defaultValue, keybindId, null, true);
 	}
 
 	public HotkeyConfig(@NotNull String name, @NotNull Component displayName, @NotNull ConfigCategory category, @NotNull InputKeys defaultValue, @NotNull ResourceLocation keybindId) {
@@ -43,7 +44,7 @@ public class HotkeyConfig extends AbstractConfig<InputKeys> {
 	}
 
 	public HotkeyConfig(@NotNull String name, @NotNull ConfigCategory category, @NotNull InputKeys defaultValue, @NotNull ResourceLocation keybindId, Consumer<Keybind> onPress) {
-		this(name, Component.literal(name), category, defaultValue, keybindId, onPress, true);
+		this(name, Components.literal(name), category, defaultValue, keybindId, onPress, true);
 	}
 
 	public HotkeyConfig(@NotNull String name, @NotNull Component displayName, @NotNull ConfigCategory category, @NotNull InputKeys defaultValue, @NotNull ResourceLocation keybindId, Consumer<Keybind> onPress) {

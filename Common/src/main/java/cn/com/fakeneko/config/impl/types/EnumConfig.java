@@ -6,6 +6,7 @@ import cn.com.fakeneko.config.api.ConfigCategory;
 import cn.com.fakeneko.config.api.ConfigSerializer;
 import cn.com.fakeneko.config.impl.AbstractConfig;
 import net.minecraft.network.chat.Component;
+import cn.com.fakeneko.config.impl.Components;
 import org.jetbrains.annotations.NotNull;
 
 public class EnumConfig<E extends Enum<E>> extends AbstractConfig<E> {
@@ -15,19 +16,19 @@ public class EnumConfig<E extends Enum<E>> extends AbstractConfig<E> {
 	private final java.util.function.Function<E, Component> formatter;
 
 	public EnumConfig(@NotNull String name, @NotNull ConfigCategory category, @NotNull E defaultValue) {
-		this(name, Component.literal(name), category, defaultValue, EnumWidget.CYCLIC, e -> Component.literal(e.name()));
+		this(name, Components.literal(name), category, defaultValue, EnumWidget.CYCLIC, e -> Components.literal(e.name()));
 	}
 
 	public EnumConfig(@NotNull String name, @NotNull ConfigCategory category, @NotNull E defaultValue, @NotNull EnumWidget widget) {
-		this(name, Component.literal(name), category, defaultValue, widget, e -> Component.literal(e.name()));
+		this(name, Components.literal(name), category, defaultValue, widget, e -> Components.literal(e.name()));
 	}
 
 	public EnumConfig(@NotNull String name, @NotNull Component displayName, @NotNull ConfigCategory category, @NotNull E defaultValue) {
-		this(name, displayName, category, defaultValue, EnumWidget.CYCLIC, e -> Component.literal(e.name()));
+		this(name, displayName, category, defaultValue, EnumWidget.CYCLIC, e -> Components.literal(e.name()));
 	}
 
 	public EnumConfig(@NotNull String name, @NotNull Component displayName, @NotNull ConfigCategory category, @NotNull E defaultValue, @NotNull EnumWidget widget) {
-		this(name, displayName, category, defaultValue, widget, e -> Component.literal(e.name()));
+		this(name, displayName, category, defaultValue, widget, e -> Components.literal(e.name()));
 	}
 
 	public EnumConfig(@NotNull String name, @NotNull Component displayName, @NotNull ConfigCategory category, @NotNull E defaultValue, @NotNull EnumWidget widget, @NotNull java.util.function.Function<E, Component> formatter) {

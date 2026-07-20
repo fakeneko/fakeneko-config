@@ -40,11 +40,11 @@ public class ConfigManagerImpl implements ConfigManager {
 	}
 
 	public ConfigManagerImpl(@NotNull String modId, @NotNull Path configPath) {
-		this(modId, configPath, net.minecraft.network.chat.Component.translatable("config." + modId + ".title"));
+		this(modId, configPath, Components.translatable("config." + modId + ".title"));
 	}
 
 	public ConfigManagerImpl(@NotNull String modId) {
-		this(modId, Path.of("config").resolve(modId + ".json"), net.minecraft.network.chat.Component.translatable("config." + modId + ".title"));
+		this(modId, Path.of("config").resolve(modId + ".json"), Components.translatable("config." + modId + ".title"));
 	}
 
 	@Override
@@ -151,16 +151,25 @@ public class ConfigManagerImpl implements ConfigManager {
 
 	@SuppressWarnings({"unchecked", "rawtypes"})
 	private <T> ConfigSerializer<T> serializerFor(Config<T> config) {
-		return (ConfigSerializer<T>) switch (config) {
-			case BooleanConfig ignored -> BooleanConfig.SERIALIZER;
-			case IntegerConfig ignored -> IntegerConfig.SERIALIZER;
-			case DoubleConfig ignored -> DoubleConfig.SERIALIZER;
-			case StringConfig ignored -> StringConfig.SERIALIZER;
-			case StringListConfig ignored -> StringListConfig.SERIALIZER;
-			case HotkeyConfig ignored -> HotkeyConfig.SERIALIZER;
-			case EnumConfig<?> enumConfig -> (ConfigSerializer<T>) enumConfig.serializer();
-			default -> null;
-		};
+		ConfigSerializer<?> serializer;
+		if (config instanceof BooleanConfig) {
+			serializer = BooleanConfig.SERIALIZER;
+		} else if (config instanceof IntegerConfig) {
+			serializer = IntegerConfig.SERIALIZER;
+		} else if (config instanceof DoubleConfig) {
+			serializer = DoubleConfig.SERIALIZER;
+		} else if (config instanceof StringConfig) {
+			serializer = StringConfig.SERIALIZER;
+		} else if (config instanceof StringListConfig) {
+			serializer = StringListConfig.SERIALIZER;
+		} else if (config instanceof HotkeyConfig) {
+			serializer = HotkeyConfig.SERIALIZER;
+		} else if (config instanceof EnumConfig<?> enumConfig) {
+			serializer = enumConfig.serializer();
+		} else {
+			return null;
+		}
+		return (ConfigSerializer<T>) serializer;
 	}
 
 	public ResourceLocation id(String path) {

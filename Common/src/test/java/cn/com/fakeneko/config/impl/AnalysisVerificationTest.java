@@ -3,7 +3,6 @@ package cn.com.fakeneko.config.impl;
 import cn.com.fakeneko.config.api.ConfigCategory;
 import cn.com.fakeneko.config.impl.keybind.InputKeys;
 import cn.com.fakeneko.config.impl.types.BooleanConfig;
-import net.minecraft.network.chat.Component;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
@@ -37,7 +36,7 @@ public class AnalysisVerificationTest {
 		Path configPath = this.tempDir.resolve("bad_category.json");
 		assertDoesNotThrow(() -> Files.writeString(configPath, "{\"general\": 5}"));
 		ConfigManagerImpl manager = new ConfigManagerImpl("bad_category", configPath);
-		ConfigCategory category = manager.createCategory("general", Component.literal("General"));
+		ConfigCategory category = manager.createCategory("general", Components.literal("General"));
 		new BooleanConfig("enabled", category, true);
 		assertDoesNotThrow(manager::load, "load() threw when category value is not an object");
 	}
@@ -46,22 +45,22 @@ public class AnalysisVerificationTest {
 	public void clearedHotkeyStaysEmptyAfterReload() throws Exception {
 		Path configPath = this.tempDir.resolve("hotkey_clear.json");
 		ConfigManagerImpl manager = new ConfigManagerImpl("hotkey_clear", configPath);
-		ConfigCategory category = manager.createCategory("general", Component.literal("General"));
+		ConfigCategory category = manager.createCategory("general", Components.literal("General"));
 		cn.com.fakeneko.config.impl.types.HotkeyConfig hotkey = new cn.com.fakeneko.config.impl.types.HotkeyConfig(
 			"combo", category,
 			InputKeys.ofKeys(com.mojang.blaze3d.platform.InputConstants.KEY_LCONTROL, com.mojang.blaze3d.platform.InputConstants.KEY_K),
-			net.minecraft.resources.ResourceLocation.fromNamespaceAndPath("test", "clear_combo"));
+			new net.minecraft.resources.ResourceLocation("test", "clear_combo"));
 
 		hotkey.set(InputKeys.EMPTY);
 		manager.save();
 		String saved = Files.readString(configPath);
 
 		ConfigManagerImpl manager2 = new ConfigManagerImpl("hotkey_clear", configPath);
-		ConfigCategory category2 = manager2.createCategory("general", Component.literal("General"));
+		ConfigCategory category2 = manager2.createCategory("general", Components.literal("General"));
 		cn.com.fakeneko.config.impl.types.HotkeyConfig hotkey2 = new cn.com.fakeneko.config.impl.types.HotkeyConfig(
 			"combo", category2,
 			InputKeys.ofKeys(com.mojang.blaze3d.platform.InputConstants.KEY_LCONTROL, com.mojang.blaze3d.platform.InputConstants.KEY_K),
-			net.minecraft.resources.ResourceLocation.fromNamespaceAndPath("test", "clear_combo"));
+			new net.minecraft.resources.ResourceLocation("test", "clear_combo"));
 		manager2.load();
 
 		assertEquals(InputKeys.EMPTY, hotkey2.get(),

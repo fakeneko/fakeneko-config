@@ -24,6 +24,36 @@ minecraft {
 dependencies {
      compileOnly group:'org.spongepowered', name:'mixin', version:'0.8.5'
      implementation group: 'com.google.code.findbugs', name: 'jsr305', version: '3.0.1'
+     testImplementation platform('org.junit:junit-bom:5.9.3')
+     testImplementation 'org.junit.jupiter:junit-jupiter'
+     testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+}
+
+test {
+    useJUnitPlatform()
+
+    // LWJGL natives are required because InputConstants (GLFW) is touched by keybind tests.
+    def lwjglVersion = '3.2.2'
+    def nativesDir = layout.buildDirectory.dir('lwjgl-natives')
+    def nativesConfig = configurations.detachedConfiguration(
+        dependencies.create("org.lwjgl:lwjgl:${lwjglVersion}:natives-windows"),
+        dependencies.create("org.lwjgl:lwjgl-glfw:${lwjglVersion}:natives-windows")
+    )
+
+    doFirst {
+        def dir = nativesDir.get().asFile
+        dir.mkdirs()
+        nativesConfig.files.each { jar ->
+            copy {
+                from(zipTree(jar)) {
+                    include '**/*.dll'
+                }
+                into dir
+            }
+        }
+    }
+
+    systemProperty 'org.lwjgl.librarypath', nativesDir.get().asFile.absolutePath
 }
 
 processResources {

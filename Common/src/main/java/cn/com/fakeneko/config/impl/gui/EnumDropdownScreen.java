@@ -10,14 +10,15 @@ import net.minecraft.client.gui.components.events.GuiEventListener;
 import net.minecraft.client.gui.narration.NarratableEntry;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
+import cn.com.fakeneko.config.impl.Components;
 
 import java.util.Collections;
 import java.util.List;
 import java.util.function.Consumer;
 
 public class EnumDropdownScreen<E extends Enum<E>> extends Screen {
-	private static final Component TITLE = Component.translatable("config.fakeneko_config.enum.title");
-	private static final Component CANCEL = Component.translatable("config.fakeneko_config.cancel");
+	private static final Component TITLE = Components.translatable("config.fakeneko_config.enum.title");
+	private static final Component CANCEL = Components.translatable("config.fakeneko_config.cancel");
 
 	private static final int ROW_HEIGHT = 24;
 	private static final int OPTION_WIDTH = 200;
@@ -88,8 +89,8 @@ public class EnumDropdownScreen<E extends Enum<E>> extends Screen {
 			OptionEntry(E value, boolean current) {
 				Component label = EnumDropdownScreen.this.config.displayValue(value);
 				if (current) {
-					label = Component.literal("✓ ").withStyle(ChatFormatting.AQUA)
-						.append(label.copy().withStyle(ChatFormatting.AQUA));
+					label = Components.literal("✓ ").withStyle(ChatFormatting.AQUA)
+						.append(label);
 				}
 				this.button = new Button(0, 0, OPTION_WIDTH, OPTION_HEIGHT, label, b -> {
 					EnumDropdownScreen.this.onSelect.accept(value);

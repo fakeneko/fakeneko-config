@@ -4,6 +4,7 @@ import cn.com.fakeneko.config.api.Config;
 import cn.com.fakeneko.config.api.ConfigCategory;
 import cn.com.fakeneko.config.api.ConfigListener;
 import net.minecraft.network.chat.Component;
+import cn.com.fakeneko.config.impl.Components;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.ArrayList;
@@ -19,7 +20,7 @@ public abstract class AbstractConfig<T> implements Config<T> {
 	private final List<ConfigListener<T>> listeners = new ArrayList<>();
 
 	protected AbstractConfig(@NotNull String name, @NotNull ConfigCategory category, T defaultValue) {
-		this(name, Component.literal(name), category, defaultValue);
+		this(name, Components.literal(name), category, defaultValue);
 	}
 
 	protected AbstractConfig(@NotNull String name, @NotNull Component displayName, @NotNull ConfigCategory category, T defaultValue) {

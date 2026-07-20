@@ -1,6 +1,7 @@
 package cn.com.fakeneko.config.api;
 
 import net.minecraft.network.chat.Component;
+import cn.com.fakeneko.config.impl.Components;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.List;
@@ -27,7 +28,7 @@ public interface Config<T> {
 	 */
 	@NotNull
 	default Component displayName() {
-		return Component.literal(this.name());
+		return Components.literal(this.name());
 	}
 
 	/**

@@ -7,16 +7,17 @@ import com.mojang.blaze3d.vertex.PoseStack;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
+import cn.com.fakeneko.config.impl.Components;
 
 import java.util.ArrayList;
 import java.util.List;
 
 public class HotkeyScreen extends Screen {
-	private static final Component TITLE = Component.translatable("config.fakeneko_config.hotkey.title");
-	private static final Component PRESS = Component.translatable("config.fakeneko_config.hotkey.press");
-	private static final Component ESC_HINT = Component.translatable("config.fakeneko_config.hotkey.esc_hint");
-	private static final Component RESET = Component.translatable("config.fakeneko_config.reset_single");
-	private static final Component DONE = Component.translatable("gui.done");
+	private static final Component TITLE = Components.translatable("config.fakeneko_config.hotkey.title");
+	private static final Component PRESS = Components.translatable("config.fakeneko_config.hotkey.press");
+	private static final Component ESC_HINT = Components.translatable("config.fakeneko_config.hotkey.esc_hint");
+	private static final Component RESET = Components.translatable("config.fakeneko_config.reset_single");
+	private static final Component DONE = Components.translatable("gui.done");
 
 	private final ConfigScreen lastScreen;
 	private final HotkeyConfig config;

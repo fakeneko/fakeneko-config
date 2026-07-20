@@ -7,6 +7,7 @@ import com.mojang.serialization.JsonOps;
 import com.mojang.serialization.DataResult;
 import net.minecraft.ChatFormatting;
 import net.minecraft.network.chat.Component;
+import cn.com.fakeneko.config.impl.Components;
 import net.minecraft.network.chat.ComponentUtils;
 import net.minecraft.network.chat.MutableComponent;
 import org.jetbrains.annotations.NotNull;
@@ -21,7 +22,7 @@ import java.util.stream.IntStream;
  * This class represents a list of ordered input keys.
  */
 public class InputKeys extends AbstractCollection<InputConstants.Key> {
-	private static final Component SEPARATOR = Component.literal(" + ");
+	private static final Component SEPARATOR = Components.literal(" + ");
 	public static final InputKeys EMPTY = new InputKeys(List.of());
 
 	public static final Codec<InputKeys> CODEC = Codec.STRING.xmap(
@@ -62,13 +63,13 @@ public class InputKeys extends AbstractCollection<InputConstants.Key> {
 
 	public static MutableComponent format(Collection<InputConstants.Key> keys) {
 		if (keys.isEmpty()) {
-			return Component.empty().append(InputConstants.UNKNOWN.getDisplayName());
+			return Components.empty().append(InputConstants.UNKNOWN.getDisplayName());
 		}
 		return ComponentUtils.formatList(keys, SEPARATOR, InputConstants.Key::getDisplayName);
 	}
 
 	public static Component formatEditing(Collection<InputConstants.Key> keys) {
-		return Component.literal("> ")
+		return Components.literal("> ")
 			.append(format(keys).withStyle(ChatFormatting.WHITE, ChatFormatting.UNDERLINE))
 			.append(" <")
 			.withStyle(ChatFormatting.YELLOW);
@@ -189,13 +190,17 @@ public class InputKeys extends AbstractCollection<InputConstants.Key> {
 		@Override
 		public InputKeys deserialize(JsonElement json, Type typeOfT, JsonDeserializationContext context) throws JsonParseException {
 			DataResult<InputKeys> result = CODEC.parse(JsonOps.INSTANCE, json);
-			return result.getOrThrow(JsonParseException::new);
+			return result.resultOrPartial(message -> {
+				throw new JsonParseException(message);
+			}).orElseThrow(() -> new JsonParseException("Failed to parse InputKeys"));
 		}
 
 		@Override
 		public JsonElement serialize(InputKeys src, Type typeOfSrc, JsonSerializationContext context) {
 			DataResult<JsonElement> result = CODEC.encodeStart(JsonOps.INSTANCE, src);
-			return result.getOrThrow(IllegalArgumentException::new);
+			return result.resultOrPartial(message -> {
+				throw new IllegalArgumentException(message);
+			}).orElseThrow(() -> new IllegalArgumentException("Failed to encode InputKeys"));
 		}
 	}
 }

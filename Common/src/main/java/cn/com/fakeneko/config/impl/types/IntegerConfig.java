@@ -6,6 +6,7 @@ import cn.com.fakeneko.config.api.ConfigCategory;
 import cn.com.fakeneko.config.api.ConfigSerializer;
 import cn.com.fakeneko.config.impl.AbstractConfig;
 import net.minecraft.network.chat.Component;
+import cn.com.fakeneko.config.impl.Components;
 import org.jetbrains.annotations.NotNull;
 
 public class IntegerConfig extends AbstractConfig<Integer> {
@@ -27,7 +28,7 @@ public class IntegerConfig extends AbstractConfig<Integer> {
 	private final int max;
 
 	public IntegerConfig(@NotNull String name, @NotNull ConfigCategory category, int defaultValue, int min, int max) {
-		this(name, Component.literal(name), category, defaultValue, min, max);
+		this(name, Components.literal(name), category, defaultValue, min, max);
 	}
 
 	public IntegerConfig(@NotNull String name, @NotNull Component displayName, @NotNull ConfigCategory category, int defaultValue, int min, int max) {

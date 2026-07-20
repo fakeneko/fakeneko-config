@@ -5,6 +5,7 @@ import com.google.common.collect.Multimap;
 import com.mojang.blaze3d.platform.InputConstants;
 import it.unimi.dsi.fastutil.objects.Object2ObjectLinkedOpenHashMap;
 import net.minecraft.network.chat.Component;
+import cn.com.fakeneko.config.impl.Components;
 import net.minecraft.resources.ResourceLocation;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -35,7 +36,7 @@ public class KeybindManager {
 	}
 
 	public static Keybind register(ResourceLocation id, InputKeys keys) {
-		Component name = Component.translatable(String.format("key.%s.%s", id.getNamespace(), id.getPath()));
+		Component name = Components.translatable(String.format("key.%s.%s", id.getNamespace(), id.getPath()));
 		Keybind keybind = new SimpleKeybind(name, keys);
 		return register(id, keybind);
 	}

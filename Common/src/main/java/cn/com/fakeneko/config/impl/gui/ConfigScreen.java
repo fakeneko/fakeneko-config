@@ -10,12 +10,13 @@ import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.components.EditBox;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
+import cn.com.fakeneko.config.impl.Components;
 import org.jetbrains.annotations.NotNull;
 
 public class ConfigScreen extends Screen {
-	private static final Component SEARCH = Component.translatable("config.fakeneko_config.search");
-	private static final Component CANCEL = Component.translatable("config.fakeneko_config.cancel");
-	private static final Component DONE = Component.translatable("config.fakeneko_config.done");
+	private static final Component SEARCH = Components.translatable("config.fakeneko_config.search");
+	private static final Component CANCEL = Components.translatable("config.fakeneko_config.cancel");
+	private static final Component DONE = Components.translatable("config.fakeneko_config.done");
 
 	private final Screen lastScreen;
 	private final ConfigManager manager;
@@ -139,7 +140,7 @@ public class ConfigScreen extends Screen {
 		this.selectedCategory = category;
 		this.searchFilter = "";
 		this.scrollAmount = 0;
-		this.rebuildWidgets();
+		this.init();
 	}
 
 	/**
